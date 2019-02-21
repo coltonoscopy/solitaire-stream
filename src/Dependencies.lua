@@ -2,12 +2,14 @@ Class = require 'lib/class'
 
 require 'src/constants'
 
+require 'src/GameBoard'
 require 'src/Card'
 require 'src/Deck'
 require 'src/Util'
 
 gTextures = {
-    ['cards'] = love.graphics.newImage('graphics/playingCards.png')
+    ['cards'] = love.graphics.newImage('graphics/playingCards.png'),
+    ['card-back'] = love.graphics.newImage('graphics/cardBack.png')
 }
 
 gQuads = {
@@ -30,5 +32,3 @@ gCardQuads['hearts'] = ResortCards(gCardQuads['hearts'])
 gCardQuads['diamonds'] = ResortCards(gCardQuads['diamonds'])
 gCardQuads['clubs'] = ResortCards(gCardQuads['clubs'])
 gCardQuads['spades'] = ResortCards(gCardQuads['spades'])
-
-print(Dump(gCardQuads['hearts']))
