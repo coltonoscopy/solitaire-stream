@@ -9,7 +9,6 @@ require 'src/Dependencies'
 
 math.randomseed(os.time())
 
-local queenOfHearts = Card(QUEEN, HEARTS, 0, 0)
 local gameBoard = GameBoard()
 
 function love.load()
@@ -34,12 +33,11 @@ function love.mouse.wasButtonPressed(button)
 end
 
 function love.update(dt)
-    queenOfHearts:update(dt)
-
+    gameBoard:update(dt)
+    
     love.mouse.buttonsPressed = {}
 end
 
 function love.draw()
     gameBoard:render()
-    queenOfHearts:render(0, 0)
 end

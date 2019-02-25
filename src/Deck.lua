@@ -17,6 +17,17 @@ function Deck:init()
     self:shuffle()
 end
 
+-- return a card from the deck and remove it
+function Deck:draw()
+    local cardIndex = math.random(#self.cards)
+    local cardFromDeck = self.cards[cardIndex]
+    local cardToReturn = Card(cardFromDeck.face, cardFromDeck.suit)
+
+    table.remove(self.cards, cardIndex)
+
+    return cardToReturn
+end
+
 function Deck:shuffle()
     local newCards = {}
 
@@ -33,8 +44,5 @@ function Deck:shuffle()
 end
 
 function Deck:render()
-    for i = 1, 5 do
-        love.graphics.draw(gTextures['cards'], 
-            gCardQuads[self.cards[i].suit][self.cards[i].face], (i - 1) * 80, 50)
-    end
+    -- pass
 end
