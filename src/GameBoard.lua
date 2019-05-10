@@ -10,7 +10,8 @@ function GameBoard:init()
     self.tablePool = {}
     self.cardPickedUp = false
     self.pickedUpCards = {}
-
+    self.oldParent = nil
+    
     self:generateTableaus()
 end
 
@@ -35,19 +36,27 @@ function GameBoard:generateTableaus()
             -- ensure topmost card is set to visible
             self.tableaus[i][j].hidden = j ~= i
 
-            local padding = self.tableaus[i][j].hidden and 10 or 30
+            --initialize parent & child 
+            if j > 1 then
+                newCard.parent = self.tableaus[i][j-1] 
+                self.tableaus[i][j-1].child = newCard
+            end
+              
+            local padding = self.tableaus[i][j].hidden and 10 or 20
             yPos = yPos + padding
         end
     end
+    self.tableaus[3][2].hidden = false
 end
 
 function GameBoard:update(dt)
-
     -- update all cards in hand first
     for i = 1, #self.pickedUpCards do
-        self.pickedUpCards[i]:update(dt, self)
+        if self.pickedUpCards[i] then 
+           self.pickedUpCards[i]:update(dt, self, self.pickedUpCards)
+        end 
     end
-
+    
     -- iterate through all visible cards, allowing mouse input
     for i = 1, NUM_TABLEAUS do
 
@@ -62,10 +71,11 @@ function GameBoard:update(dt)
             elseif foundCardNotHidden then
                 break
             end
-
+            ---self.tableaus[i][j]:show("Updating..")
             self.tableaus[i][j]:update(dt, self, self.tableaus[i])
         end
     end
+    
 end
 
 function GameBoard:render()
@@ -78,7 +88,7 @@ function GameBoard:render()
 end
 
 function GameBoard:renderPickedUpCards()
-    for i = 1, #self.pickedUpCards do
+    for i = #self.pickedUpCards, 1, -1 do
         self.pickedUpCards[i]:render()
     end
 end
