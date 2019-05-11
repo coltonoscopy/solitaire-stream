@@ -12,6 +12,7 @@ function GameBoard:init()
     self.pickedUpCards = {}
     self.oldParent = nil
     self.cardPile = CardPile() 
+    self.winPile = WinPile()
     
     self:generateTableaus()
 end
@@ -91,8 +92,9 @@ end
 function GameBoard:render()
     self:drawBackground()
     self:renderTableaus()
-    self:renderPickedUpCards()
     self.cardPile:render()
+    self.winPile:render()
+    self:renderPickedUpCards()
 end
 
 function GameBoard:renderPickedUpCards()

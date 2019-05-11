@@ -144,12 +144,16 @@ function Card:update(dt, gameBoard, tableau)
                 gameBoard.oldParent = nil
             end
         end
-    elseif love.mouse.wasButtonPressed(2) and self.hidden then
+        
+    --right click for movement to win Pile    
+    elseif love.mouse.wasButtonPressed(2) then
         local x, y = love.mouse.getPosition()
-
+        
+        --checkbounds AND if picked up card has no children     
         if x >= self.x and x <= self.x + CARD_WIDTH and
-            y >= self.y and y <= self.y + CARD_HEIGHT then
-            self.hidden = false
+           y >= self.y and y <= self.y + CARD_HEIGHT and 
+           self.child == nil then
+           gameBoard.winPile:addCard(self)      
         end
     end
 end
@@ -163,3 +167,24 @@ function Card:render(x, y)
             self.x, self.y)
     end
 end
+
+--[[check if the current card and check card are in the order given by faceOrder & suitOrder
+    faceOrder can be "ascending" or "descending"; suitOrder can be "same" or "opposite"  
+    used while moving cards between tableaus and to win Pile
+  ]] 
+function Card:isOrdered(checkCard, faceOrder, suitOrder) 
+    local faceCompared, suitCompared
+    faceCompared = (faceOrder == "ascending") and (checkCard.face == self.face + 1) or (checkCard.face == self.face - 1)
+    
+    if suitOrder == "same" then
+       suitCompared = (checkCard.suit == self.suit)
+    else
+        if self.suit == CLUBS or self.suit == SPADES then
+            suitCompared = (checkCard.suit == HEARTS or checkCard.suit == DIAMONDS)
+        else
+            suitCompared = (checkCard.suit == CLUBS or checkCard.suit == SPADES)
+        end
+    end
+    
+    return (faceCompared and suitCompared)
+end  
