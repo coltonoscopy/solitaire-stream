@@ -133,7 +133,7 @@ function Card:update(dt, gameBoard, tableau)
                  gameBoard.oldParent = tableau
                  
             elseif self.pickedUp then
-                --check bound with a tableau card
+                --check if picked cards are within bounds of another tableau and store the final tableau  
                 local tempTableau = self:checkBounds(x, y, gameBoard.tableaus, gameBoard)
                 
                 -- If pickedUp cards have moved from one tableau to another, then reveal the bottomcard of old tableau 

@@ -5,6 +5,7 @@ require 'src/constants'
 require 'src/GameBoard'
 require 'src/Card'
 require 'src/Deck'
+require 'src/CardPile'
 require 'src/Util'
 
 gTextures = {

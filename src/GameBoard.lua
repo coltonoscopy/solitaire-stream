@@ -11,6 +11,7 @@ function GameBoard:init()
     self.cardPickedUp = false
     self.pickedUpCards = {}
     self.oldParent = nil
+    self.cardPile = CardPile() 
     
     self:generateTableaus()
 end
@@ -46,7 +47,14 @@ function GameBoard:generateTableaus()
             yPos = yPos + padding
         end
     end
-    self.tableaus[3][2].hidden = false
+    
+    --populate the closedPile of cardPile with the remaining cards
+   local newCard = self.deck:draw()
+   while newCard do
+        self.cardPile:addCard(newCard)
+        newCard = self.deck:draw()
+   end
+   
 end
 
 function GameBoard:update(dt)
@@ -76,15 +84,15 @@ function GameBoard:update(dt)
         end
     end
     
+    --allow mouse input on cardPile
+        self.cardPile:update(dt)
 end
 
 function GameBoard:render()
     self:drawBackground()
-
-    -- render tableaus
     self:renderTableaus()
-
     self:renderPickedUpCards()
+    self.cardPile:render()
 end
 
 function GameBoard:renderPickedUpCards()
@@ -117,8 +125,7 @@ function GameBoard:drawBackground()
 
     -- stock itself
     love.graphics.rectangle('line', 490, 50, CARD_WIDTH, CARD_HEIGHT, 3)
-    love.graphics.draw(gTextures['card-back'], 490, 50)
-
+   
     -- tableau grid markers
     love.graphics.rectangle('line', 10, 160, CARD_WIDTH, CARD_HEIGHT, 3)
     love.graphics.rectangle('line', 90, 160, CARD_WIDTH, CARD_HEIGHT, 3)
