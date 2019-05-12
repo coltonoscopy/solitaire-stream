@@ -28,7 +28,7 @@ function CardPile:openCard()
         local card = table.remove(self.closedStock)
         
         --move card to open pile
-        table.insert(self.openStock, 1, card)
+        table.insert(self.openStock, card)
         card.hidden = false
         card.x = 410
         card.y = 50
@@ -38,16 +38,22 @@ function CardPile:openCard()
            self.numDraws = self.numDraws + 1
            
            --this should not work but let us see
-           local tempPile = self.closedStock
-           self.closedStock = self.openStock
-           self.openStock = tempPile
+           while #self.openStock > 0 do
+                table.insert(self.closedStock, table.remove(self.openStock))
+           end   
        else
            love.window.showMessageBox("Alert", "No more draws allowed!", "info", true)
        end 
     end
 end
 
-function CardPile:update(dt) 
+function CardPile:addtoOpenStock(newCard)
+        table.insert(self.openStock, newCard)
+        newCard.x = 410
+        newCard.y = 50
+end        
+
+function CardPile:update(dt, gameBoard) 
      --check if the mouseposition is within bounds of the closed stack 
      local closedcard
      if #self.closedStock > 0 then
@@ -59,8 +65,15 @@ function CardPile:update(dt)
         x >= 490 and x <= 490 + CARD_WIDTH and
         y >= 50  and y <= 50 + CARD_HEIGHT then
         self:openCard()
+     elseif (love.mouse.wasButtonPressed(1) or love.mouse.wasButtonPressed(2))  and 
+        x >= 410 and x <= 410 + CARD_WIDTH and
+        y >= 50  and y <= 50 + CARD_HEIGHT then
+        if #self.openStock > 0 then
+            local tempCard = self.openStock[#self.openStock]
+            tempCard:update(dt, gameBoard, self.openStock, "openStock")
+            love.mouse.setPosition(405, y) 
+        end 
      end
-     
 end 
 
 function CardPile:render()
@@ -71,8 +84,7 @@ function CardPile:render()
      
      --if closedStock contains atleast 1 card
      if #self.openStock > 0 then
-       local bottomCard = self.openStock[1]
+       local bottomCard = self.openStock[#self.openStock]
        bottomCard:render()
      end    
 end
-

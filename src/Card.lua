@@ -23,7 +23,7 @@ end
 ]]
 function Card:pickUp(tableau, newTableau)
     self.pickedUp = true
-    self:show("Picked up...") 
+    --self:show("Picked up...") 
     if tableau == nil then
         return
     end
@@ -37,7 +37,7 @@ function Card:pickUp(tableau, newTableau)
 end
 
 function Card:placeDown(tableau, oldTableau)
-    self:show("Placed down...") 
+    --self:show("Placed down...") 
     
     --insert card into tableau & update position to below the parent
     table.insert(tableau, table.remove(oldTableau))
@@ -65,24 +65,24 @@ function Card:removeParentLink()
 end  
 
 --Checks if the final position of the pickedUpCard is within a tableau/not & Returns the tableau/ old position
-function Card:checkBounds(posX, posY, tableaus, gameBoard)
+function Card:checkBounds(posX, posY, gameBoard, pileType)
     local bottomCard, newTableau = nil
     
     --check if the final position is within bounds of a tableau
-    for i = 1, #tableaus do
+    for i = 1, #gameBoard.tableaus do
         --in case the tableau has cards, check bounds of the lowermost card
-        if #tableaus[i] > 0 then 
-            bottomCard = tableaus[i][#tableaus[i]]
+        if #gameBoard.tableaus[i] > 0 then 
+            bottomCard = gameBoard.tableaus[i][#gameBoard.tableaus[i]]
             if posX >= bottomCard.x and posX <= bottomCard.x + CARD_WIDTH and
                 posY >= bottomCard.y and posY <= bottomCard.y + CARD_HEIGHT then
-                newTableau = tableaus[i]           
+                newTableau = gameBoard.tableaus[i]           
                 break  
             end
         else
         --if tableau has no cards, check bounds of tableau itself
              if posX >= (10 + (i - 1) * 80) and posX <= (10 + (i - 1) * 80 + CARD_WIDTH) and
                 posY >= 160 and posY <= (160 +  CARD_HEIGHT) then
-                newTableau = tableaus[i]           
+                newTableau = gameBoard.tableaus[i]           
                 break  
              end
         end
@@ -91,7 +91,17 @@ function Card:checkBounds(posX, posY, tableaus, gameBoard)
     --final position is not within bounds of any tableau,  
     --move pickedUp cards to its old tableau/pile
     if newTableau == nil then
-        newTableau = gameBoard.oldParent
+        --check the type of parent for movement
+        if gameBoard.oldParentType == "tableau" then  
+            newTableau = gameBoard.oldParent
+        elseif gameBoard.oldParentType == "winPile" then
+            local tempCard = table.remove(gameBoard.pickedUpCards,1)
+            gameBoard.winPile:addCard(tempCard)
+            return
+        elseif gameBoard.oldParentType == "openStock" then
+            gameBoard.cardPile:addtoOpenStock(table.remove(gameBoard.pickedUpCards))
+            return           
+        end    
     end
     
     --placedown all the pickedup cards starting from the topmost card
@@ -104,8 +114,8 @@ function Card:checkBounds(posX, posY, tableaus, gameBoard)
     else
     -- parent/new tableau is an empty tableau
         local tempCard = gameBoard.pickedUpCards[#gameBoard.pickedUpCards]
-        for i = 1, #tableaus do
-            if newTableau == tableaus[i] then
+        for i = 1, #gameBoard.tableaus do
+            if newTableau == gameBoard.tableaus[i] then
                tempCard.x = (10 + (i - 1) * 80)
                tempCard.y = 160
                tempCard:placeDown(newTableau, gameBoard.pickedUpCards)
@@ -119,10 +129,13 @@ function Card:checkBounds(posX, posY, tableaus, gameBoard)
     return newTableau
 end  
 
-function Card:update(dt, gameBoard, tableau)
+--[[pileType indicates which type of card is being clicked; can be "pickedUp", "tableau", "winPile", "openStock"
+    needed only for restoring a card to its original pile in case of an invalid move
+  ]]
+function Card:update(dt, gameBoard, tableau, pileType)
 
     -- update card based on its parent, provided it is in PickedUpcards
-    if self.pickedUp and tableau == gameBoard.pickedUpCards then
+    if self.pickedUp  then
         if self.parent == nil then
             self.x, self.y = love.mouse.getPosition()
             self.x = self.x - CARD_WIDTH / 2
@@ -154,10 +167,11 @@ function Card:update(dt, gameBoard, tableau)
                  self:removeParentLink()
                  self:pickUp(tableau, gameBoard.pickedUpCards)
                  gameBoard.oldParent = tableau
-                 
+                 gameBoard.oldParentType = pileType 
+                 gameBoard:printTableau()
             elseif self.pickedUp then
                 --check if picked cards are within bounds of another tableau and store the final tableau  
-                local tempTableau = self:checkBounds(x, y, gameBoard.tableaus, gameBoard)
+                local tempTableau = self:checkBounds(x, y, gameBoard, pileType)
                 
                 -- If pickedUp cards have moved from one tableau to another, then reveal the bottomcard of old tableau 
                 if tempTableau ~= gameBoard.oldParent and #gameBoard.oldParent > 0 then 
@@ -169,7 +183,7 @@ function Card:update(dt, gameBoard, tableau)
         end
         
     --right click for movement to win Pile    
-    elseif love.mouse.wasButtonPressed(2) then
+    elseif love.mouse.wasButtonPressed(2) and pileType ~= "winPile" then
         local x, y = love.mouse.getPosition()
         
         --checkbounds AND if picked up card has no children     
@@ -177,7 +191,8 @@ function Card:update(dt, gameBoard, tableau)
            y >= self.y and y <= self.y + CARD_HEIGHT and 
            self.child == nil then
            if gameBoard.winPile:addCard(self) then
-                table.remove(tableau, #tableau)       
+                table.remove(tableau)  
+                gameBoard:checkWin()
            end
         end
     end
@@ -210,6 +225,6 @@ function Card:isOrdered(checkCard, faceOrder, suitOrder)
             suitCompared = (checkCard.suit == CLUBS or checkCard.suit == SPADES)
         end
     end
-    
+   
     return (faceCompared and suitCompared)
 end  

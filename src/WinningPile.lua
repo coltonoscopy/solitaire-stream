@@ -46,6 +46,32 @@ function WinPile:addCard(newCard)
     end
 end
 
+function WinPile:update(dt, gameBoard)
+    local x, y = love.mouse.getPosition() 
+    for i = 1, 4 do
+        if #self.pile[i] > 0 and
+           love.mouse.wasButtonPressed(1) and 
+           x >= 10 + 80 * (i - 1) and x <= 10 + 80 * (i - 1) + CARD_WIDTH and
+           y >= 50  and y <= 50 + CARD_HEIGHT then
+           self.pile[i][#self.pile[i]]:update(dt, gameBoard, self.pile[i], "winPile")
+        end
+    end
+end
+
+function WinPile:checkWin()
+    for i = 1, 4 do
+        if #self.pile[i] == 2 then
+           return true
+           --if self.pile[i][#self.pile[i]].face ~= KING then
+                --return false
+           --end
+        else
+           return false
+        end
+    end
+    return true
+end
+
 function WinPile:render()
     for i = 1, 4 do
         if #self.pile[i] > 0 then

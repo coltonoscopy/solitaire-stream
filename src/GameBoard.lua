@@ -11,8 +11,10 @@ function GameBoard:init()
     self.cardPickedUp = false
     self.pickedUpCards = {}
     self.oldParent = nil
+    self.oldParentType = nil 
     self.cardPile = CardPile() 
     self.winPile = WinPile()
+    self.isWin = false
     
     self:generateTableaus()
 end
@@ -81,20 +83,24 @@ function GameBoard:update(dt)
                 break
             end
             ---self.tableaus[i][j]:show("Updating..")
-            self.tableaus[i][j]:update(dt, self, self.tableaus[i])
+            self.tableaus[i][j]:update(dt, self, self.tableaus[i], "tableau")
         end
     end
     
-    --allow mouse input on cardPile
-        self.cardPile:update(dt)
+    --allow mouse input on cardPile & winPile
+        self.cardPile:update(dt, self)
+        self.winPile:update(dt, self)
 end
 
 function GameBoard:render()
+    
     self:drawBackground()
-    self:renderTableaus()
-    self.cardPile:render()
-    self.winPile:render()
-    self:renderPickedUpCards()
+    if not self.isWin then
+        self:renderTableaus()
+        self.cardPile:render()
+        self.winPile:render()
+        self:renderPickedUpCards()
+    end
 end
 
 function GameBoard:renderPickedUpCards()
@@ -114,26 +120,53 @@ function GameBoard:renderTableaus()
 end
 
 function GameBoard:drawBackground()
-    love.graphics.clear(0, 0.3, 0, 1)
+    if not self.isWin then
+        love.graphics.clear(0, 0.3, 0, 1)
 
-    -- main stack placeholders
-    love.graphics.rectangle('line', 10, 50, CARD_WIDTH, CARD_HEIGHT, 3)
-    love.graphics.rectangle('line', 90, 50, CARD_WIDTH, CARD_HEIGHT, 3)
-    love.graphics.rectangle('line', 170, 50, CARD_WIDTH, CARD_HEIGHT, 3)
-    love.graphics.rectangle('line', 250, 50, CARD_WIDTH, CARD_HEIGHT, 3)
+        -- main stack placeholders
+        love.graphics.rectangle('line', 10, 50, CARD_WIDTH, CARD_HEIGHT, 3)
+        love.graphics.rectangle('line', 90, 50, CARD_WIDTH, CARD_HEIGHT, 3)
+        love.graphics.rectangle('line', 170, 50, CARD_WIDTH, CARD_HEIGHT, 3)
+        love.graphics.rectangle('line', 250, 50, CARD_WIDTH, CARD_HEIGHT, 3)
 
-    -- active stock card
-    love.graphics.rectangle('line', 410, 50, CARD_WIDTH, CARD_HEIGHT, 3)
+        -- active stock card
+        love.graphics.rectangle('line', 410, 50, CARD_WIDTH, CARD_HEIGHT, 3)
 
-    -- stock itself
-    love.graphics.rectangle('line', 490, 50, CARD_WIDTH, CARD_HEIGHT, 3)
-   
-    -- tableau grid markers
-    love.graphics.rectangle('line', 10, 160, CARD_WIDTH, CARD_HEIGHT, 3)
-    love.graphics.rectangle('line', 90, 160, CARD_WIDTH, CARD_HEIGHT, 3)
-    love.graphics.rectangle('line', 170, 160, CARD_WIDTH, CARD_HEIGHT, 3)
-    love.graphics.rectangle('line', 250, 160, CARD_WIDTH, CARD_HEIGHT, 3)
-    love.graphics.rectangle('line', 330, 160, CARD_WIDTH, CARD_HEIGHT, 3)
-    love.graphics.rectangle('line', 410, 160, CARD_WIDTH, CARD_HEIGHT, 3)
-    love.graphics.rectangle('line', 490, 160, CARD_WIDTH, CARD_HEIGHT, 3)
+        -- stock itself
+        love.graphics.rectangle('line', 490, 50, CARD_WIDTH, CARD_HEIGHT, 3)
+       
+        -- tableau grid markers
+        love.graphics.rectangle('line', 10, 160, CARD_WIDTH, CARD_HEIGHT, 3)
+        love.graphics.rectangle('line', 90, 160, CARD_WIDTH, CARD_HEIGHT, 3)
+        love.graphics.rectangle('line', 170, 160, CARD_WIDTH, CARD_HEIGHT, 3)
+        love.graphics.rectangle('line', 250, 160, CARD_WIDTH, CARD_HEIGHT, 3)
+        love.graphics.rectangle('line', 330, 160, CARD_WIDTH, CARD_HEIGHT, 3)
+        love.graphics.rectangle('line', 410, 160, CARD_WIDTH, CARD_HEIGHT, 3)
+        love.graphics.rectangle('line', 490, 160, CARD_WIDTH, CARD_HEIGHT, 3)
+    else
+        love.graphics.clear(1, 1, 1, 1)
+        love.graphics.setColor(12/255, 10/255, 62/255, 1)
+        love.graphics.rectangle('fill', 0, 300, 1240, 80, 3)
+        love.graphics.setColor(249/255, 86/255, 79/255, 1)
+        love.graphics.setFont(love.graphics.newFont(40))
+        love.graphics.printf("CONGRATULATIONS!!! YOU HAVE WON :)", 0, 320, 1240, "center")
+    end
+end
+
+function GameBoard:checkWin()
+    self.isWin = self.winPile:checkWin()
+end
+
+--Helper Function:: print Tableau
+function GameBoard:printTableau()
+    for i = 1, NUM_TABLEAUS do
+        print("Tableau #"..i)
+        for j = 1, #self.tableaus[i] do
+            print(j.."-->"..self.tableaus[i][j].face..self.tableaus[i][j].suit)
+        end
+    end
+    print("PickedUp Cards")
+    for j = 1, #self.pickedUpCards do
+            print(j.."-->"..self.pickedUpCards[j].face..self.pickedUpCards[j].suit)
+    end
 end
