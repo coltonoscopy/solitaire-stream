@@ -41,11 +41,13 @@ function Card:placeDown(tableau, oldTableau)
     
     --insert card into tableau & update position to below the parent
     table.insert(tableau, table.remove(oldTableau))
-    self.x = self.parent.x
-    self.y = self.parent.y + 20  
-  
+    if self.parent then
+        self.x = self.parent.x
+        self.y = self.parent.y + 20  
+    end
+    
     if self.child then
-       self.child:placeDown(tableau, oldTableau)
+        self.child:placeDown(tableau, oldTableau)
     end         
     self.pickedUp = false
 end
@@ -68,6 +70,7 @@ function Card:checkBounds(posX, posY, tableaus, gameBoard)
     
     --check if the final position is within bounds of a tableau
     for i = 1, #tableaus do
+        --in case the tableau has cards, check bounds of the lowermost card
         if #tableaus[i] > 0 then 
             bottomCard = tableaus[i][#tableaus[i]]
             if posX >= bottomCard.x and posX <= bottomCard.x + CARD_WIDTH and
@@ -75,6 +78,13 @@ function Card:checkBounds(posX, posY, tableaus, gameBoard)
                 newTableau = tableaus[i]           
                 break  
             end
+        else
+        --if tableau has no cards, check bounds of tableau itself
+             if posX >= (10 + (i - 1) * 80) and posX <= (10 + (i - 1) * 80 + CARD_WIDTH) and
+                posY >= 160 and posY <= (160 +  CARD_HEIGHT) then
+                newTableau = tableaus[i]           
+                break  
+             end
         end
     end
     
@@ -82,15 +92,28 @@ function Card:checkBounds(posX, posY, tableaus, gameBoard)
     --move pickedUp cards to its old tableau/pile
     if newTableau == nil then
         newTableau = gameBoard.oldParent
-        bottomCard = newTableau[#newTableau]
     end
     
     --placedown all the pickedup cards starting from the topmost card
-    bottomCard.child = gameBoard.pickedUpCards[#gameBoard.pickedUpCards]
-    bottomCard.child.parent = bottomCard  
-    bottomCard.child:show("Picked up card top:")
-    bottomCard.child:placeDown(newTableau, gameBoard.pickedUpCards)
-    
+    --separate treatment if the moved tableau
+    if #newTableau > 0 then
+        bottomCard = newTableau[#newTableau]
+        bottomCard.child = gameBoard.pickedUpCards[#gameBoard.pickedUpCards]
+        bottomCard.child.parent = bottomCard  
+        bottomCard.child:placeDown(newTableau, gameBoard.pickedUpCards)
+    else
+    -- parent/new tableau is an empty tableau
+        local tempCard = gameBoard.pickedUpCards[#gameBoard.pickedUpCards]
+        for i = 1, #tableaus do
+            if newTableau == tableaus[i] then
+               tempCard.x = (10 + (i - 1) * 80)
+               tempCard.y = 160
+               tempCard:placeDown(newTableau, gameBoard.pickedUpCards)
+               bottomCard = tempCard
+               break
+            end
+        end                  
+    end
     --set mouse Pointer to the left & out of bounds of the bottomCard to prevent "picking up" bottomCard recursively
     love.mouse.setPosition(bottomCard.x - 5, posY)         
     return newTableau
@@ -153,7 +176,9 @@ function Card:update(dt, gameBoard, tableau)
         if x >= self.x and x <= self.x + CARD_WIDTH and
            y >= self.y and y <= self.y + CARD_HEIGHT and 
            self.child == nil then
-           gameBoard.winPile:addCard(self)      
+           if gameBoard.winPile:addCard(self) then
+                table.remove(tableau, #tableau)       
+           end
         end
     end
 end

@@ -12,6 +12,7 @@ function WinPile:init()
     end     
 end
 
+--Returns true if the card can be added to a winning pile; false if card can't be moved
 function WinPile:addCard(newCard)
     --if the card is an Ace, then add it to a new Pile
     local position = 0
@@ -39,6 +40,9 @@ function WinPile:addCard(newCard)
         newCard:removeParentLink()
         newCard.x = 10 + 80 * (position - 1)
         newCard.y = 50
+        return true
+    else
+        return false
     end
 end
 
