@@ -82,7 +82,6 @@ function GameBoard:update(dt)
             elseif foundCardNotHidden then
                 break
             end
-            ---self.tableaus[i][j]:show("Updating..")
             self.tableaus[i][j]:update(dt, self, self.tableaus[i], "tableau")
         end
     end
@@ -147,7 +146,7 @@ function GameBoard:drawBackground()
         love.graphics.clear(1, 1, 1, 1)
         love.graphics.setColor(12/255, 10/255, 62/255, 1)
         love.graphics.rectangle('fill', 0, 300, 1240, 80, 3)
-        love.graphics.setColor(249/255, 86/255, 79/255, 1)
+        love.graphics.setColor(243/255, 198/255, 119/255, 1)
         love.graphics.setFont(love.graphics.newFont(40))
         love.graphics.printf("CONGRATULATIONS!!! YOU HAVE WON :)", 0, 320, 1240, "center")
     end

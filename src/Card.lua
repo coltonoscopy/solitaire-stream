@@ -23,7 +23,6 @@ end
 ]]
 function Card:pickUp(tableau, newTableau)
     self.pickedUp = true
-    --self:show("Picked up...") 
     if tableau == nil then
         return
     end
@@ -37,13 +36,15 @@ function Card:pickUp(tableau, newTableau)
 end
 
 function Card:placeDown(tableau, oldTableau)
-    --self:show("Placed down...") 
     
     --insert card into tableau & update position to below the parent
     table.insert(tableau, table.remove(oldTableau))
     if self.parent then
         self.x = self.parent.x
-        self.y = self.parent.y + 20  
+        self.y = self.parent.y + 10
+        if not self.parent.hidden then
+             self.y = self.y + 10
+        end
     end
     
     if self.child then
@@ -67,16 +68,24 @@ end
 --Checks if the final position of the pickedUpCard is within a tableau/not & Returns the tableau/ old position
 function Card:checkBounds(posX, posY, gameBoard, pileType)
     local bottomCard, newTableau = nil
+    local tempCard = gameBoard.pickedUpCards[#gameBoard.pickedUpCards]
     
     --check if the final position is within bounds of a tableau
     for i = 1, #gameBoard.tableaus do
-        --in case the tableau has cards, check bounds of the lowermost card
+    
+        --in case the tableau has cards, check bounds of the lowermost card 
+        --and if picked up card & lowermost card are in ascending order of value and opposite suits
+        
         if #gameBoard.tableaus[i] > 0 then 
             bottomCard = gameBoard.tableaus[i][#gameBoard.tableaus[i]]
             if posX >= bottomCard.x and posX <= bottomCard.x + CARD_WIDTH and
-                posY >= bottomCard.y and posY <= bottomCard.y + CARD_HEIGHT then
-                newTableau = gameBoard.tableaus[i]           
-                break  
+               posY >= bottomCard.y and posY <= bottomCard.y + CARD_HEIGHT then
+               if tempCard:isOrdered(bottomCard, "ascending", "opposite") then
+                   newTableau = gameBoard.tableaus[i]           
+                   break
+               else
+                   break
+               end  
             end
         else
         --if tableau has no cards, check bounds of tableau itself
@@ -95,8 +104,7 @@ function Card:checkBounds(posX, posY, gameBoard, pileType)
         if gameBoard.oldParentType == "tableau" then  
             newTableau = gameBoard.oldParent
         elseif gameBoard.oldParentType == "winPile" then
-            local tempCard = table.remove(gameBoard.pickedUpCards,1)
-            gameBoard.winPile:addCard(tempCard)
+            gameBoard.winPile:addCard(table.remove(gameBoard.pickedUpCards))
             return
         elseif gameBoard.oldParentType == "openStock" then
             gameBoard.cardPile:addtoOpenStock(table.remove(gameBoard.pickedUpCards))
@@ -113,7 +121,7 @@ function Card:checkBounds(posX, posY, gameBoard, pileType)
         bottomCard.child:placeDown(newTableau, gameBoard.pickedUpCards)
     else
     -- parent/new tableau is an empty tableau
-        local tempCard = gameBoard.pickedUpCards[#gameBoard.pickedUpCards]
+       
         for i = 1, #gameBoard.tableaus do
             if newTableau == gameBoard.tableaus[i] then
                tempCard.x = (10 + (i - 1) * 80)
@@ -168,7 +176,7 @@ function Card:update(dt, gameBoard, tableau, pileType)
                  self:pickUp(tableau, gameBoard.pickedUpCards)
                  gameBoard.oldParent = tableau
                  gameBoard.oldParentType = pileType 
-                 gameBoard:printTableau()
+       
             elseif self.pickedUp then
                 --check if picked cards are within bounds of another tableau and store the final tableau  
                 local tempTableau = self:checkBounds(x, y, gameBoard, pileType)
@@ -198,7 +206,7 @@ function Card:update(dt, gameBoard, tableau, pileType)
     end
 end
 
-function Card:render(x, y)
+function Card:render()
     if self.hidden then
         love.graphics.draw(gTextures['card-back'], 
             self.x, self.y)

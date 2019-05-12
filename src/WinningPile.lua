@@ -60,12 +60,7 @@ end
 
 function WinPile:checkWin()
     for i = 1, 4 do
-        if #self.pile[i] == 2 then
-           return true
-           --if self.pile[i][#self.pile[i]].face ~= KING then
-                --return false
-           --end
-        else
+        if #self.pile[i] < 13 then
            return false
         end
     end
