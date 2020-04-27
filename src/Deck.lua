@@ -19,6 +19,9 @@ end
 
 -- return a card from the deck and remove it
 function Deck:draw()
+    if #self.cards <= 0 then
+        return nil
+    end
     local cardIndex = math.random(#self.cards)
     local cardFromDeck = self.cards[cardIndex]
     local cardToReturn = Card(cardFromDeck.face, cardFromDeck.suit)
